@@ -1,0 +1,12 @@
+# Environnement virtuel
+.venv/
+
+# Données extraites
+citations.json
+
+# Python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
