@@ -1,27 +1,37 @@
 from scrapling import Fetcher
 
-# Fetcher est l'objet qui fait les requêtes HTTP (comme un navigateur)
 fetcher = Fetcher()
 
-# On télécharge la page — page est un objet Scrapling qu'on peut interroger
-page = fetcher.get("https://quotes.toscrape.com/")
+BASE_URL = "https://quotes.toscrape.com"
+url_courante = BASE_URL + "/"
 
-# Chaque citation est dans un bloc HTML avec class="quote"
-# .css() permet de sélectionner des éléments avec un sélecteur CSS
-quotes = page.css(".quote")
+toutes_les_citations = []
+numero_page = 1
 
-print(f"{len(quotes)} citations trouvées\n")
+# On boucle tant qu'il y a une page suivante
+while url_courante:
+    print(f"--- Page {numero_page} : {url_courante}")
+    page = fetcher.get(url_courante)
 
-for quote in quotes:
-    # .css() retourne une liste — [0] prend le premier élément
-    # .text est le texte à l'intérieur de l'élément
-    texte  = quote.css(".text")[0].text
-    auteur = quote.css(".author")[0].text
+    # Extraction des citations de cette page (même logique qu'avant)
+    for quote in page.css(".quote"):
+        texte  = quote.css(".text")[0].text
+        auteur = quote.css(".author")[0].text
+        tags   = [tag.text for tag in quote.css(".tag")]
+        toutes_les_citations.append({"texte": texte, "auteur": auteur, "tags": tags})
 
-    # Les tags sont plusieurs éléments — on récupère une liste
-    tags = [tag.text for tag in quote.css(".tag")]
+    # Cherche le bouton "Next" — s'il n'existe pas, next_btn est une liste vide
+    next_btn = page.css(".next a")
+    if next_btn:
+        # urljoin() construit l'URL complète à partir du chemin relatif (/page/2/)
+        url_courante = next_btn[0].urljoin(next_btn[0].attrib["href"])
+        numero_page += 1
+    else:
+        # Plus de bouton "Next" = dernière page, on arrête la boucle
+        url_courante = None
 
-    print(f"Citation : {texte}")
-    print(f"Auteur   : {auteur}")
-    print(f"Tags     : {', '.join(tags)}")
-    print("-" * 50)
+print(f"\nTotal : {len(toutes_les_citations)} citations sur {numero_page} pages\n")
+
+for c in toutes_les_citations:
+    print(f"{c['auteur']} — {c['texte'][:60]}...")
+    print(f"  Tags : {', '.join(c['tags'])}")
