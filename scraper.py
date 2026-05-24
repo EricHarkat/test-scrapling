@@ -1,3 +1,4 @@
+import json
 from scrapling import Fetcher
 
 fetcher = Fetcher()
@@ -30,8 +31,11 @@ while url_courante:
         # Plus de bouton "Next" = dernière page, on arrête la boucle
         url_courante = None
 
-print(f"\nTotal : {len(toutes_les_citations)} citations sur {numero_page} pages\n")
+print(f"\nTotal : {len(toutes_les_citations)} citations sur {numero_page} pages")
 
-for c in toutes_les_citations:
-    print(f"{c['auteur']} — {c['texte'][:60]}...")
-    print(f"  Tags : {', '.join(c['tags'])}")
+# open() ouvre un fichier en écriture ("w"), encoding="utf-8" pour les accents
+with open("citations.json", "w", encoding="utf-8") as f:
+    # indent=2 rend le fichier lisible (indenté), ensure_ascii=False garde les accents
+    json.dump(toutes_les_citations, f, indent=2, ensure_ascii=False)
+
+print("Sauvegardé dans citations.json")
